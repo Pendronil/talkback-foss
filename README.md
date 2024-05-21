@@ -22,6 +22,7 @@ All changes are documented in the commits log. Below are the most important ones
 * added Gradle Wrapper to simplify build process on various systems
 * various improvements from [GrapheneOS](https://github.com/GrapheneOS/talkback) project by [Daniel Micay](https://github.com/thestinger)
 * updated dependencies which may fix bugs and potential security issues
+* Do not show onboarding when lock task mode is enabled ([PR #77](https://github.com/talkback-foss-team/talkback-foss/pull/77) by [@marukami](https://github.com/marukami))
 * Expanded instructions in the readme
 
 There is also an issue tracker where various issues and improvements can be discussed. Unfortunately, the upstream code is not being updated too often.
