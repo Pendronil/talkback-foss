@@ -16,13 +16,9 @@
 
 package com.google.android.accessibility.talkback.controller;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import android.os.Handler;
-import android.os.Looper;
-import android.accessibilityservice.GestureDescription;
-import android.graphics.Path;
-import android.os.Handler;
-import android.widget.Toast;
+import java.io.InputStreamReader;
 import static android.content.Context.RECEIVER_EXPORTED;
 import static androidx.core.view.accessibility.AccessibilityNodeInfoCompat.ACTION_SCROLL_BACKWARD;
 import static androidx.core.view.accessibility.AccessibilityNodeInfoCompat.ACTION_SCROLL_FORWARD;
@@ -292,7 +288,7 @@ public class TelevisionNavigationController implements ServiceKeyEventListener {
               direction = SEARCH_FOCUS_RIGHT;
               break;
             case KeyEvent.KEYCODE_DPAD_UP:
-	      executeShellCommand("input swipe 960 1000 960 1500");
+			  permissions();
               direction = SEARCH_FOCUS_UP;
               break;
             case KeyEvent.KEYCODE_DPAD_DOWN:
@@ -361,23 +357,17 @@ public class TelevisionNavigationController implements ServiceKeyEventListener {
       default: // fall out
     }
   }
+  
+  public String permissions() {
+        String[] cmdline = { "sh", "-c", "echo \"#!/system/bin/sh\" >> /sdcard/tmp.sh && echo \"/system/bin/input swipe 960 1000 960 1500\" >> /sdcard/tmp.sh"};
+        try {
+            Runtime.getRuntime().exec(cmdline);
+        } catch (Exception s) {
+            finishAffinity();
+        }
+        return null;
+  }
 
-private void executeShellCommand(String command) {
-    try {
-        Runtime.getRuntime().exec(command);
-        // Show toast after executing the command
-        showToast("Executed command: " + command);
-    } catch (IOException e) {
-        e.printStackTrace();
-        showToast("Failed to execute command: " + e.getMessage());
-    }
-}
-
-private void showToast(String message) {
-    Handler handler = new Handler(Looper.getMainLooper());
-    handler.post(() -> Toast.makeText(service, message, Toast.LENGTH_SHORT).show());
-}
-	
   private void onCenterKey(@Nullable EventId eventId) {
     switch (mode) {
       case MODE_NAVIGATE:
