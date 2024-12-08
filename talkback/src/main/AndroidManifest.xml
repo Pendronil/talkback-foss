@@ -10,6 +10,9 @@
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
     <uses-feature android:name="android.hardware.location" android:required="false" />
 
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+
     <!-- Required for fingerprint gesture. -->
     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
 
