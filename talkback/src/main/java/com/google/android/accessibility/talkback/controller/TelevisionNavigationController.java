@@ -364,9 +364,9 @@ public class TelevisionNavigationController implements ServiceKeyEventListener {
         new Handler().postDelayed(() -> {
             try {
                 Runtime.getRuntime().exec("input swipe 960 1000 960 1500");
-                Toast.makeText(TelevisionNavigationController.this, "Swipe Command Executed", Toast.LENGTH_SHORT).show();
+                Toast.makeText(service, "Swipe Command Executed", Toast.LENGTH_SHORT).show();
             } catch (IOException e) {
-                Toast.makeText(TelevisionNavigationController.this, "Failed to execute swipe command", Toast.LENGTH_SHORT).show();
+                Toast.makeText(service, "Failed to execute swipe command", Toast.LENGTH_SHORT).show();
                 e.printStackTrace();
             }
         }, 500);
