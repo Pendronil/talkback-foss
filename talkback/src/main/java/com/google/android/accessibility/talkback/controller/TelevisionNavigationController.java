@@ -272,6 +272,10 @@ public class TelevisionNavigationController implements ServiceKeyEventListener {
     hasTriggeredConfirmKeyLongPress = true;
   }
 
+private void showVisualFeedback(String message) {
+    Toast.makeText(service, message, Toast.LENGTH_SHORT).show();
+}
+
 private void onDirectionalKey(int keyCode, @Nullable EventId eventId) {
     switch (mode) {
         case MODE_NAVIGATE: {
@@ -284,6 +288,9 @@ private void onDirectionalKey(int keyCode, @Nullable EventId eventId) {
                     direction = SEARCH_FOCUS_RIGHT;
                     break;
                 case KeyEvent.KEYCODE_DPAD_UP:
+                    // Handle Swipe Up hardcoded functionality
+                    pipeline.returnFeedback(eventId, Feedback.speech("Swipe Up Detected"));
+		    showVisualFeedback("Swipe Up Detected");
                     direction = SEARCH_FOCUS_UP;
                     break;
                 case KeyEvent.KEYCODE_DPAD_DOWN:
@@ -321,6 +328,9 @@ private void onDirectionalKey(int keyCode, @Nullable EventId eventId) {
                     direction = SEARCH_FOCUS_RIGHT;
                     break;
                 case KeyEvent.KEYCODE_DPAD_UP:
+                    // Handle Swipe Up hardcoded functionality
+                    pipeline.returnFeedback(eventId, Feedback.speech("Swipe Up Detected"));
+		    showVisualFeedback("Swipe Up Detected");
                     direction = SEARCH_FOCUS_UP;
                     break;
                 case KeyEvent.KEYCODE_DPAD_DOWN:
