@@ -277,10 +277,6 @@ public class TelevisionNavigationController implements ServiceKeyEventListener {
       case MODE_NAVIGATE:
         {
 	  AccessibilityNodeInfoCompat cursor = getFocus(FocusType.ANY_FOCUS, eventId);
-	 if (Role.getRole(cursor) != Role.ROLE_SEEK_CONTROL) {
-            setMode(MODE_NAVIGATE, eventId);
-          } else {
-            boolean isRtl = WindowUtils.isScreenLayoutRTL(service);
           @SearchDirectionOrUnknown int direction = SEARCH_FOCUS_UNKNOWN;
           switch (keyCode) {
             case KeyEvent.KEYCODE_DPAD_LEFT:
