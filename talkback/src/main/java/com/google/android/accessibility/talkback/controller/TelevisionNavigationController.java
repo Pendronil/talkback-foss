@@ -277,10 +277,15 @@ public class TelevisionNavigationController implements ServiceKeyEventListener {
 
 private void onDirectionalKey(int keyCode, @Nullable EventId eventId) {
     AccessibilityNodeInfoCompat currentFocus = getFocus(FocusType.ANY_FOCUS, eventId);
-    
-    // Check if the focus is on the 3 horizontal lines (navigation button) and discard it
+
+    // Check if the focus is on the 3 horizontal lines (navigation button) and handle the focus correctly
     if (currentFocus != null && "com.netflix.mediaclient:id/menu_navigation_button_view".equals(currentFocus.getViewIdResourceName())) {
-        return; // Ignore focus on the navigation button
+        // If the focus is on the navigation button, we move the focus away from it
+        AccessibilityNodeInfoCompat newFocus = findValidFocusableElement();
+        if (newFocus != null) {
+            setFocus(newFocus);
+        }
+        return; // Do not process directional input if stuck on the navigation button
     }
 
     switch (mode) {
@@ -359,6 +364,27 @@ private void onDirectionalKey(int keyCode, @Nullable EventId eventId) {
         }
         break;
       default: // fall out
+    }
+}
+
+// Helper method to find a valid focusable element if we're stuck on the navigation button
+private AccessibilityNodeInfoCompat findValidFocusableElement() {
+    // Search for the next valid focusable element, such as a main menu item, in the current view
+    // You could adjust this to your needs, e.g., searching for a specific UI element on Netflix
+    return findNextFocusableNode(); // Replace with actual logic to find a valid node
+}
+
+// Helper method to move focus to the given node
+private void setFocus(AccessibilityNodeInfoCompat node) {
+    if (node != null) {
+        // Focus the new node
+        pipeline.returnFeedback(
+            null,
+            Feedback.focusDirection(SEARCH_FOCUS_UNKNOWN)
+                .setGranularity(DEFAULT)
+                .setInputMode(INPUT_MODE_TV_REMOTE)
+                .setScroll(true)
+                .setNodeFocus(node));
     }
 }
 
