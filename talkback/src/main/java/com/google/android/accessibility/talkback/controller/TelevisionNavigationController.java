@@ -276,74 +276,92 @@ public class TelevisionNavigationController implements ServiceKeyEventListener {
   }
 
 private void onDirectionalKey(int keyCode, @Nullable EventId eventId) {
+    AccessibilityNodeInfoCompat currentFocus = getFocus(FocusType.ANY_FOCUS, eventId);
+    
+    // Check if the focus is on the 3 horizontal lines (navigation button) and discard it
+    if (currentFocus != null && "com.netflix.mediaclient:id/menu_navigation_button_view".equals(currentFocus.getViewIdResourceName())) {
+        return; // Ignore focus on the navigation button
+    }
+
     switch (mode) {
-        case MODE_NAVIGATE: {
-            @SearchDirectionOrUnknown int direction = SEARCH_FOCUS_UNKNOWN;
+      case MODE_NAVIGATE:
+        {
+          @SearchDirectionOrUnknown int direction = SEARCH_FOCUS_UNKNOWN;
+          switch (keyCode) {
+            case KeyEvent.KEYCODE_DPAD_LEFT:
+              direction = SEARCH_FOCUS_LEFT;
+              break;
+            case KeyEvent.KEYCODE_DPAD_RIGHT:
+              direction = SEARCH_FOCUS_RIGHT;
+              break;
+            case KeyEvent.KEYCODE_DPAD_UP:
+              direction = SEARCH_FOCUS_UP;
+              break;
+            case KeyEvent.KEYCODE_DPAD_DOWN:
+              direction = SEARCH_FOCUS_DOWN;
+              break;
+            default: // fall out
+          }
+          if (direction != SEARCH_FOCUS_UNKNOWN) {
+            pipeline.returnFeedback(
+                eventId,
+                Feedback.focusDirection(direction)
+                    .setGranularity(DEFAULT)
+                    .setInputMode(INPUT_MODE_TV_REMOTE)
+                    .setScroll(true)
+                    .setDefaultToInputFocus(true));
+            if (eventId != null) {
+              primesController.recordDuration(
+                  TimerAction.DPAD_NAVIGATION,
+                  eventId.getEventTimeMs(),
+                  SystemClock.uptimeMillis());
+            }
+          }
+        }
+        break;
+      case MODE_SEEK_CONTROL:
+        {
+          AccessibilityNodeInfoCompat cursor = getFocus(FocusType.ANY_FOCUS, eventId);
+          if (Role.getRole(cursor) != Role.ROLE_SEEK_CONTROL) {
+            setMode(MODE_NAVIGATE, eventId);
+          } else {
+            boolean isRtl = WindowUtils.isScreenLayoutRTL(service);
             switch (keyCode) {
-                case KeyEvent.KEYCODE_DPAD_LEFT:
-                    direction = SEARCH_FOCUS_LEFT;
-                    break;
-                case KeyEvent.KEYCODE_DPAD_RIGHT:
-                    direction = SEARCH_FOCUS_RIGHT;
-                    break;
-                case KeyEvent.KEYCODE_DPAD_UP:
-                    //direction = SEARCH_FOCUS_UP;
-                    handleScroll(eventId, ACTION_SCROLL_BACKWARD); // Scroll up
-                    break;
-                case KeyEvent.KEYCODE_DPAD_DOWN:
-                    direction = SEARCH_FOCUS_DOWN;
-                    break;
-                default: // fall out
-            }
-            if (direction != SEARCH_FOCUS_UNKNOWN) {
+              case KeyEvent.KEYCODE_DPAD_UP:
                 pipeline.returnFeedback(
-                    eventId,
-                    Feedback.focusDirection(direction)
-                        .setGranularity(DEFAULT)
-                        .setInputMode(INPUT_MODE_TV_REMOTE)
-                        .setScroll(true)
-                        .setDefaultToInputFocus(true));
-                if (eventId != null) {
-                    // Record navigation time
-                    primesController.recordDuration(
-                        TimerAction.DPAD_NAVIGATION,
-                        eventId.getEventTimeMs(),
-                        SystemClock.uptimeMillis());
+                    eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_FORWARD));
+                break;
+              case KeyEvent.KEYCODE_DPAD_RIGHT:
+                if (isRtl) {
+                  pipeline.returnFeedback(
+                      eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_BACKWARD));
+                } else {
+                  pipeline.returnFeedback(
+                      eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_FORWARD));
                 }
-            }
-            break;
-        }
-        case MODE_SEEK_CONTROL: {
-            AccessibilityNodeInfoCompat cursor = getFocus(FocusType.ANY_FOCUS, eventId);
-            if (Role.getRole(cursor) != Role.ROLE_SEEK_CONTROL) {
-                setMode(MODE_NAVIGATE, eventId);
-            } else {
-                boolean isRtl = WindowUtils.isScreenLayoutRTL(service);
-                switch (keyCode) {
-                    case KeyEvent.KEYCODE_DPAD_UP:
-                        pipeline.returnFeedback(
-                            eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_FORWARD));
-                        break;
-                    case KeyEvent.KEYCODE_DPAD_RIGHT:
-                        pipeline.returnFeedback(
-                            eventId, Feedback.nodeAction(cursor, isRtl ? ACTION_SCROLL_BACKWARD : ACTION_SCROLL_FORWARD));
-                        break;
-                    case KeyEvent.KEYCODE_DPAD_DOWN:
-                        pipeline.returnFeedback(
-                            eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_BACKWARD));
-                        break;
-                    case KeyEvent.KEYCODE_DPAD_LEFT:
-                        pipeline.returnFeedback(
-                            eventId, Feedback.nodeAction(cursor, isRtl ? ACTION_SCROLL_FORWARD : ACTION_SCROLL_BACKWARD));
-                        break;
-                    default: // fall out
+                break;
+              case KeyEvent.KEYCODE_DPAD_DOWN:
+                pipeline.returnFeedback(
+                    eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_BACKWARD));
+                break;
+              case KeyEvent.KEYCODE_DPAD_LEFT:
+                if (isRtl) {
+                  pipeline.returnFeedback(
+                      eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_FORWARD));
+                } else {
+                  pipeline.returnFeedback(
+                      eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_BACKWARD));
                 }
+                break;
+              default: // fall out
             }
-            break;
+          }
         }
-        default: // fall out
+        break;
+      default: // fall out
     }
 }
+
 
 /**
  * Handles scroll feedback action.
