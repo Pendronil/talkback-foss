@@ -272,45 +272,44 @@ public class TelevisionNavigationController implements ServiceKeyEventListener {
     hasTriggeredConfirmKeyLongPress = true;
   }
 
-  private void onDirectionalKey(int keyCode, @Nullable EventId eventId) {
+private void onDirectionalKey(int keyCode, @Nullable EventId eventId) {
     switch (mode) {
-      case MODE_NAVIGATE:
-        {
-          @SearchDirectionOrUnknown int direction = SEARCH_FOCUS_UNKNOWN;
-          switch (keyCode) {
-            case KeyEvent.KEYCODE_DPAD_LEFT:
-              direction = SEARCH_FOCUS_LEFT;
-              break;
-            case KeyEvent.KEYCODE_DPAD_RIGHT:
-              direction = SEARCH_FOCUS_RIGHT;
-              break;
-            case KeyEvent.KEYCODE_DPAD_UP:
-              direction = SEARCH_FOCUS_UP;
-              break;
-            case KeyEvent.KEYCODE_DPAD_DOWN:
-              direction = SEARCH_FOCUS_DOWN;
-              break;
-            default: // fall out
-          }
-          if (direction != SEARCH_FOCUS_UNKNOWN) {
-            pipeline.returnFeedback(
-                eventId,
-                Feedback.focusDirection(direction)
-                    .setGranularity(DEFAULT)
-                    .setInputMode(INPUT_MODE_TV_REMOTE)
-                    .setScroll(true)
-                    .setDefaultToInputFocus(true));
-            if (eventId != null) {
-              // We use keyEvent.getEventTime() as starting point because we don't know how long the
-              // message was enqueued before onKeyEvent() has started.
-              primesController.recordDuration(
-                  TimerAction.DPAD_NAVIGATION,
-                  eventId.getEventTimeMs(),
-                  SystemClock.uptimeMillis());
+        case MODE_NAVIGATE:
+            // For DPAD_UP, trigger a scroll up (ACTION_SCROLL_BACKWARD)
+            if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+                AccessibilityNodeInfoCompat focusNode = getFocus(FocusType.ANY_FOCUS, eventId);
+                if (focusNode != null) {
+                    pipeline.returnFeedback(
+                        eventId,
+                        Feedback.nodeAction(focusNode, AccessibilityNodeInfoCompat.ACTION_SCROLL_BACKWARD)
+                    );
+                }
+            } else {
+                @SearchDirectionOrUnknown int direction = SEARCH_FOCUS_UNKNOWN;
+                switch (keyCode) {
+                    case KeyEvent.KEYCODE_DPAD_LEFT:
+                        direction = SEARCH_FOCUS_LEFT;
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_RIGHT:
+                        direction = SEARCH_FOCUS_RIGHT;
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_DOWN:
+                        direction = SEARCH_FOCUS_DOWN;
+                        break;
+                    default:
+                        // No action for unhandled keys
+                }
+                if (direction != SEARCH_FOCUS_UNKNOWN) {
+                    pipeline.returnFeedback(
+                        eventId,
+                        Feedback.focusDirection(direction)
+                            .setGranularity(DEFAULT)
+                            .setInputMode(INPUT_MODE_TV_REMOTE)
+                            .setScroll(true)
+                            .setDefaultToInputFocus(true));
+                }
             }
-          }
-        }
-        break;
+            break;
       case MODE_SEEK_CONTROL:
         {
           AccessibilityNodeInfoCompat cursor = getFocus(FocusType.ANY_FOCUS, eventId);
