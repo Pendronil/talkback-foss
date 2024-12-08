@@ -16,6 +16,9 @@
 
 package com.google.android.accessibility.talkback.controller;
 
+import android.accessibilityservice.GestureDescription;
+import android.graphics.Path;
+import android.os.Handler;
 import android.widget.Toast;
 import static android.content.Context.RECEIVER_EXPORTED;
 import static androidx.core.view.accessibility.AccessibilityNodeInfoCompat.ACTION_SCROLL_BACKWARD;
@@ -277,6 +280,21 @@ private void showVisualFeedback(String message) {
     Toast.makeText(service, message, Toast.LENGTH_SHORT).show();
 }
 
+private void simulateSwipe(int startX, int startY, int endX, int endY) {
+    Path swipePath = new Path();
+    swipePath.moveTo(startX, startY);
+    swipePath.lineTo(endX, endY);
+
+    GestureDescription.StrokeDescription strokeDescription = new GestureDescription.StrokeDescription(
+        swipePath, 0, 500); // 500ms duration
+
+    GestureDescription gesture = new GestureDescription.Builder()
+        .addStroke(strokeDescription)
+        .build();
+
+    service.dispatchGesture(gesture, null, null);
+}
+
 private void onDirectionalKey(int keyCode, @Nullable EventId eventId) {
     switch (mode) {
         case MODE_NAVIGATE: {
@@ -290,7 +308,7 @@ private void onDirectionalKey(int keyCode, @Nullable EventId eventId) {
                     break;
                 case KeyEvent.KEYCODE_DPAD_UP:
                     // Handle Swipe Up hardcoded functionality
-                    pipeline.returnFeedback(eventId, Feedback.speech("Swipe Up Detected"));
+                    simulateSwipe(960, 1500, 960, 1000);
 		    showVisualFeedback("Swipe Up Detected");
                     direction = SEARCH_FOCUS_UP;
                     break;
@@ -330,7 +348,7 @@ private void onDirectionalKey(int keyCode, @Nullable EventId eventId) {
                     break;
                 case KeyEvent.KEYCODE_DPAD_UP:
                     // Handle Swipe Up hardcoded functionality
-                    pipeline.returnFeedback(eventId, Feedback.speech("Swipe Up Detected"));
+                    simulateSwipe(960, 1500, 960, 1000);
 		    showVisualFeedback("Swipe Up Detected");
                     direction = SEARCH_FOCUS_UP;
                     break;
