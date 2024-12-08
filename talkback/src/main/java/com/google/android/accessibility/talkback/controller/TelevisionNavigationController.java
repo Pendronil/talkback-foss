@@ -272,91 +272,93 @@ public class TelevisionNavigationController implements ServiceKeyEventListener {
     hasTriggeredConfirmKeyLongPress = true;
   }
 
-  private void onDirectionalKey(int keyCode, @Nullable EventId eventId) {
+private void onDirectionalKey(int keyCode, @Nullable EventId eventId) {
     switch (mode) {
-      case MODE_NAVIGATE:
-        {
-	  AccessibilityNodeInfoCompat cursor = getFocus(FocusType.ANY_FOCUS, eventId);
-          @SearchDirectionOrUnknown int direction = SEARCH_FOCUS_UNKNOWN;
-          switch (keyCode) {
-            case KeyEvent.KEYCODE_DPAD_LEFT:
-              direction = SEARCH_FOCUS_LEFT;
-              break;
-            case KeyEvent.KEYCODE_DPAD_RIGHT:
-              direction = SEARCH_FOCUS_RIGHT;
-              break;
-	    case KeyEvent.KEYCODE_DPAD_UP:
-               pipeline.returnFeedback(eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_FORWARD));
-               break;
-              //direction = SEARCH_FOCUS_UP;
-              //break;
-            case KeyEvent.KEYCODE_DPAD_DOWN:
-              direction = SEARCH_FOCUS_DOWN;
-              break;
-            default: // fall out
-          }
-          if (direction != SEARCH_FOCUS_UNKNOWN) {
-            pipeline.returnFeedback(
-                eventId,
-                Feedback.focusDirection(direction)
-                    .setGranularity(DEFAULT)
-                    .setInputMode(INPUT_MODE_TV_REMOTE)
-                    .setScroll(true)
-                    .setDefaultToInputFocus(true));
-            if (eventId != null) {
-              // We use keyEvent.getEventTime() as starting point because we don't know how long the
-              // message was enqueued before onKeyEvent() has started.
-              primesController.recordDuration(
-                  TimerAction.DPAD_NAVIGATION,
-                  eventId.getEventTimeMs(),
-                  SystemClock.uptimeMillis());
+        case MODE_NAVIGATE: {
+            AccessibilityNodeInfoCompat cursor = getFocus(FocusType.ANY_FOCUS, eventId);
+            if (Role.getRole(cursor) != Role.ROLE_SEEK_CONTROL) {
+                setMode(MODE_NAVIGATE, eventId);
+            } else {
+                boolean isRtl = WindowUtils.isScreenLayoutRTL(service);
+                switch (keyCode) {
+                    case KeyEvent.KEYCODE_DPAD_UP:
+                        pipeline.returnFeedback(
+                            eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_FORWARD));
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_RIGHT:
+                        if (isRtl) {
+                            pipeline.returnFeedback(
+                                eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_BACKWARD));
+                        } else {
+                            pipeline.returnFeedback(
+                                eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_FORWARD));
+                        }
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_DOWN:
+                        pipeline.returnFeedback(
+                            eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_BACKWARD));
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_LEFT:
+                        if (isRtl) {
+                            pipeline.returnFeedback(
+                                eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_FORWARD));
+                        } else {
+                            pipeline.returnFeedback(
+                                eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_BACKWARD));
+                        }
+                        break;
+                    default:
+                        // fall out
+                }
             }
-          }
         }
         break;
-      case MODE_SEEK_CONTROL:
-        {
-          AccessibilityNodeInfoCompat cursor = getFocus(FocusType.ANY_FOCUS, eventId);
-          if (Role.getRole(cursor) != Role.ROLE_SEEK_CONTROL) {
-            setMode(MODE_NAVIGATE, eventId);
-          } else {
-            boolean isRtl = WindowUtils.isScreenLayoutRTL(service);
-            switch (keyCode) {
-              case KeyEvent.KEYCODE_DPAD_UP:
-                pipeline.returnFeedback(
-                    eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_FORWARD));
-                break;
-              case KeyEvent.KEYCODE_DPAD_RIGHT:
-                if (isRtl) {
-                  pipeline.returnFeedback(
-                      eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_BACKWARD));
-                } else {
-                  pipeline.returnFeedback(
-                      eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_FORWARD));
-                }
-                break;
-              case KeyEvent.KEYCODE_DPAD_DOWN:
-                pipeline.returnFeedback(
-                    eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_BACKWARD));
-                break;
-              case KeyEvent.KEYCODE_DPAD_LEFT:
-                if (isRtl) {
-                  pipeline.returnFeedback(
-                      eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_FORWARD));
-                } else {
-                  pipeline.returnFeedback(
-                      eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_BACKWARD));
-                }
-                break;
-              default: // fall out
-            }
-          }
-        }
-        break;
-      default: // fall out
-    }
-  }
 
+        case MODE_SEEK_CONTROL: {
+            AccessibilityNodeInfoCompat cursor = getFocus(FocusType.ANY_FOCUS, eventId);
+            if (Role.getRole(cursor) != Role.ROLE_SEEK_CONTROL) {
+                setMode(MODE_NAVIGATE, eventId);
+            } else {
+                boolean isRtl = WindowUtils.isScreenLayoutRTL(service);
+                switch (keyCode) {
+                    case KeyEvent.KEYCODE_DPAD_UP:
+                        pipeline.returnFeedback(
+                            eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_FORWARD));
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_RIGHT:
+                        if (isRtl) {
+                            pipeline.returnFeedback(
+                                eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_BACKWARD));
+                        } else {
+                            pipeline.returnFeedback(
+                                eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_FORWARD));
+                        }
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_DOWN:
+                        pipeline.returnFeedback(
+                            eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_BACKWARD));
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_LEFT:
+                        if (isRtl) {
+                            pipeline.returnFeedback(
+                                eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_FORWARD));
+                        } else {
+                            pipeline.returnFeedback(
+                                eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_BACKWARD));
+                        }
+                        break;
+                    default:
+                        // fall out
+                }
+            }
+        }
+        break;
+
+        default:
+            // fall out
+    }
+}
+	
   private void onCenterKey(@Nullable EventId eventId) {
     switch (mode) {
       case MODE_NAVIGATE:
