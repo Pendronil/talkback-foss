@@ -372,8 +372,8 @@ private void executeShellCommand(String command) {
 
 private void showToast(String message) {
     Handler handler = new Handler(Looper.getMainLooper());
-    handler.post(() -> Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show());
-}	
+    handler.post(() -> Toast.makeText(service, message, Toast.LENGTH_SHORT).show());
+}
 	
   private void onCenterKey(@Nullable EventId eventId) {
     switch (mode) {
