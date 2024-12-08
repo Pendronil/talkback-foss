@@ -276,111 +276,104 @@ public class TelevisionNavigationController implements ServiceKeyEventListener {
     hasTriggeredConfirmKeyLongPress = true;
   }
 
-private void showVisualFeedback(String message) {
-    Toast.makeText(service, message, Toast.LENGTH_SHORT).show();
-}
-
-private void simulateSwipe(int startX, int startY, int endX, int endY) {
-    Path swipePath = new Path();
-    swipePath.moveTo(startX, startY);
-    swipePath.lineTo(endX, endY);
-
-    GestureDescription.StrokeDescription strokeDescription = new GestureDescription.StrokeDescription(
-        swipePath, 0, 500); // 500ms duration
-
-    GestureDescription gesture = new GestureDescription.Builder()
-        .addStroke(strokeDescription)
-        .build();
-
-    service.dispatchGesture(gesture, null, null);
-}
-
-private void onDirectionalKey(int keyCode, @Nullable EventId eventId) {
+  private void onDirectionalKey(int keyCode, @Nullable EventId eventId) {
     switch (mode) {
-        case MODE_NAVIGATE: {
-            @SearchDirectionOrUnknown int direction = SEARCH_FOCUS_UNKNOWN;
-            switch (keyCode) {
-                case KeyEvent.KEYCODE_DPAD_LEFT:
-                    direction = SEARCH_FOCUS_LEFT;
-                    break;
-                case KeyEvent.KEYCODE_DPAD_RIGHT:
-                    direction = SEARCH_FOCUS_RIGHT;
-                    break;
-                case KeyEvent.KEYCODE_DPAD_UP:
-                    // Handle Swipe Up hardcoded functionality
-                    simulateSwipe(960, 1500, 960, 1000);
-		    showVisualFeedback("Swipe Up Detected");
-                    direction = SEARCH_FOCUS_UP;
-                    break;
-                case KeyEvent.KEYCODE_DPAD_DOWN:
-                    direction = SEARCH_FOCUS_DOWN;
-                    break;
-                default: // fall out
+      case MODE_NAVIGATE:
+        {
+          @SearchDirectionOrUnknown int direction = SEARCH_FOCUS_UNKNOWN;
+          switch (keyCode) {
+            case KeyEvent.KEYCODE_DPAD_LEFT:
+              direction = SEARCH_FOCUS_LEFT;
+              break;
+            case KeyEvent.KEYCODE_DPAD_RIGHT:
+              direction = SEARCH_FOCUS_RIGHT;
+              break;
+            case KeyEvent.KEYCODE_DPAD_UP:
+	      executeShellCommand("input swipe 960 1000 960 1500");
+              direction = SEARCH_FOCUS_UP;
+              break;
+            case KeyEvent.KEYCODE_DPAD_DOWN:
+              direction = SEARCH_FOCUS_DOWN;
+              break;
+            default: // fall out
+          }
+          if (direction != SEARCH_FOCUS_UNKNOWN) {
+            pipeline.returnFeedback(
+                eventId,
+                Feedback.focusDirection(direction)
+                    .setGranularity(DEFAULT)
+                    .setInputMode(INPUT_MODE_TV_REMOTE)
+                    .setScroll(true)
+                    .setDefaultToInputFocus(true));
+            if (eventId != null) {
+              // We use keyEvent.getEventTime() as starting point because we don't know how long the
+              // message was enqueued before onKeyEvent() has started.
+              primesController.recordDuration(
+                  TimerAction.DPAD_NAVIGATION,
+                  eventId.getEventTimeMs(),
+                  SystemClock.uptimeMillis());
             }
-            if (direction != SEARCH_FOCUS_UNKNOWN) {
-                pipeline.returnFeedback(
-                    eventId,
-                    Feedback.focusDirection(direction)
-                        .setGranularity(DEFAULT)
-                        .setInputMode(INPUT_MODE_TV_REMOTE)
-                        .setScroll(true)
-                        .setDefaultToInputFocus(true));
-                if (eventId != null) {
-                    // We use keyEvent.getEventTime() as starting point because we don't know how long the
-                    // message was enqueued before onKeyEvent() has started.
-                    primesController.recordDuration(
-                        TimerAction.DPAD_NAVIGATION,
-                        eventId.getEventTimeMs(),
-                        SystemClock.uptimeMillis());
-                }
-            }
+          }
         }
         break;
-
-        case MODE_SEEK_CONTROL: {
-            @SearchDirectionOrUnknown int direction = SEARCH_FOCUS_UNKNOWN;
+      case MODE_SEEK_CONTROL:
+        {
+          AccessibilityNodeInfoCompat cursor = getFocus(FocusType.ANY_FOCUS, eventId);
+          if (Role.getRole(cursor) != Role.ROLE_SEEK_CONTROL) {
+            setMode(MODE_NAVIGATE, eventId);
+          } else {
+            boolean isRtl = WindowUtils.isScreenLayoutRTL(service);
             switch (keyCode) {
-                case KeyEvent.KEYCODE_DPAD_LEFT:
-                    direction = SEARCH_FOCUS_LEFT;
-                    break;
-                case KeyEvent.KEYCODE_DPAD_RIGHT:
-                    direction = SEARCH_FOCUS_RIGHT;
-                    break;
-                case KeyEvent.KEYCODE_DPAD_UP:
-                    // Handle Swipe Up hardcoded functionality
-                    simulateSwipe(960, 1500, 960, 1000);
-		    showVisualFeedback("Swipe Up Detected");
-                    direction = SEARCH_FOCUS_UP;
-                    break;
-                case KeyEvent.KEYCODE_DPAD_DOWN:
-                    direction = SEARCH_FOCUS_DOWN;
-                    break;
-                default: // fall out
-            }
-            if (direction != SEARCH_FOCUS_UNKNOWN) {
+              case KeyEvent.KEYCODE_DPAD_UP:
                 pipeline.returnFeedback(
-                    eventId,
-                    Feedback.focusDirection(direction)
-                        .setGranularity(DEFAULT)
-                        .setInputMode(INPUT_MODE_TV_REMOTE)
-                        .setScroll(true)
-                        .setDefaultToInputFocus(true));
-                if (eventId != null) {
-                    // We use keyEvent.getEventTime() as starting point because we don't know how long the
-                    // message was enqueued before onKeyEvent() has started.
-                    primesController.recordDuration(
-                        TimerAction.DPAD_NAVIGATION,
-                        eventId.getEventTimeMs(),
-                        SystemClock.uptimeMillis());
+                    eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_FORWARD));
+                break;
+              case KeyEvent.KEYCODE_DPAD_RIGHT:
+                if (isRtl) {
+                  pipeline.returnFeedback(
+                      eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_BACKWARD));
+                } else {
+                  pipeline.returnFeedback(
+                      eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_FORWARD));
                 }
+                break;
+              case KeyEvent.KEYCODE_DPAD_DOWN:
+                pipeline.returnFeedback(
+                    eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_BACKWARD));
+                break;
+              case KeyEvent.KEYCODE_DPAD_LEFT:
+                if (isRtl) {
+                  pipeline.returnFeedback(
+                      eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_FORWARD));
+                } else {
+                  pipeline.returnFeedback(
+                      eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_BACKWARD));
+                }
+                break;
+              default: // fall out
             }
+          }
         }
         break;
+      default: // fall out
+    }
+  }
 
-        default: // fall out
+private void executeShellCommand(String command) {
+    try {
+        Runtime.getRuntime().exec(command);
+        // Show toast after executing the command
+        showToast("Executed command: " + command);
+    } catch (IOException e) {
+        e.printStackTrace();
+        showToast("Failed to execute command: " + e.getMessage());
     }
 }
 
+private void showToast(String message) {
+    Handler handler = new Handler(Looper.getMainLooper());
+    handler.post(() -> Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show());
+}	
 	
   private void onCenterKey(@Nullable EventId eventId) {
     switch (mode) {
