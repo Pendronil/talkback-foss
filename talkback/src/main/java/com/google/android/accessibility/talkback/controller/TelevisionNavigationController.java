@@ -16,6 +16,9 @@
 
 package com.google.android.accessibility.talkback.controller;
 
+import java.io.IOException;
+import android.os.Handler;
+import android.os.Looper;
 import android.accessibilityservice.GestureDescription;
 import android.graphics.Path;
 import android.os.Handler;
