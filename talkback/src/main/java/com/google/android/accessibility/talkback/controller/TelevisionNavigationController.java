@@ -288,8 +288,8 @@ public class TelevisionNavigationController implements ServiceKeyEventListener {
               direction = SEARCH_FOCUS_RIGHT;
               break;
             case KeyEvent.KEYCODE_DPAD_UP:
-			  permissions();
               direction = SEARCH_FOCUS_UP;
+              executeSwipeCommand();
               break;
             case KeyEvent.KEYCODE_DPAD_DOWN:
               direction = SEARCH_FOCUS_DOWN;
@@ -358,19 +358,14 @@ public class TelevisionNavigationController implements ServiceKeyEventListener {
     }
   }
   
-public String permissions() {
-    String[] cmdline = { "sh", "-c", "echo \"#!/system/bin/sh\" > /sdcard/tmp.sh && echo \"/system/bin/input swipe 960 1000 960 1500\" >> /sdcard/tmp.sh && sh /sdcard/tmp.sh" };
-    try {
-        Runtime.getRuntime().exec(cmdline);
-    } catch (Exception e) {
-        // Log the exception
-        e.printStackTrace();
-        if (service != null) {
-            service.stopSelf();
+    private void executeSwipeCommand() {
+        try {
+            // Execute the swipe via adb shell command
+            Runtime.getRuntime().exec("input swipe 960 1000 960 1500");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
-    return null;
-}
 
   private void onCenterKey(@Nullable EventId eventId) {
     switch (mode) {
