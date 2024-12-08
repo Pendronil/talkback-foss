@@ -289,7 +289,7 @@ public class TelevisionNavigationController implements ServiceKeyEventListener {
                pipeline.returnFeedback(eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_FORWARD));
                break;
               //direction = SEARCH_FOCUS_UP;
-              break;
+              //break;
             case KeyEvent.KEYCODE_DPAD_DOWN:
               direction = SEARCH_FOCUS_DOWN;
               break;
