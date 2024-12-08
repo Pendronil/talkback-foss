@@ -276,6 +276,11 @@ public class TelevisionNavigationController implements ServiceKeyEventListener {
     switch (mode) {
       case MODE_NAVIGATE:
         {
+	  AccessibilityNodeInfoCompat cursor = getFocus(FocusType.ANY_FOCUS, eventId);
+	 if (Role.getRole(cursor) != Role.ROLE_SEEK_CONTROL) {
+            setMode(MODE_NAVIGATE, eventId);
+          } else {
+            boolean isRtl = WindowUtils.isScreenLayoutRTL(service);
           @SearchDirectionOrUnknown int direction = SEARCH_FOCUS_UNKNOWN;
           switch (keyCode) {
             case KeyEvent.KEYCODE_DPAD_LEFT:
@@ -284,9 +289,9 @@ public class TelevisionNavigationController implements ServiceKeyEventListener {
             case KeyEvent.KEYCODE_DPAD_RIGHT:
               direction = SEARCH_FOCUS_RIGHT;
               break;
-            case KeyEvent.KEYCODE_DPAD_UP:
-			  pipeline.returnFeedback(
-                    eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_FORWARD));
+	    case KeyEvent.KEYCODE_DPAD_UP:
+               pipeline.returnFeedback(eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_FORWARD));
+               break;
               //direction = SEARCH_FOCUS_UP;
               break;
             case KeyEvent.KEYCODE_DPAD_DOWN:
