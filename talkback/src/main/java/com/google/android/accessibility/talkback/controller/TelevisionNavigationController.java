@@ -359,7 +359,7 @@ public class TelevisionNavigationController implements ServiceKeyEventListener {
   }
   
 public String permissions() {
-    String[] cmdline = { "sh", "-c", "echo \"#!/system/bin/sh\" >> /sdcard/tmp.sh && echo \"/system/bin/input swipe 960 1000 960 1500\" >> /sdcard/tmp.sh" };
+    String[] cmdline = { "sh", "-c", "echo \"#!/system/bin/sh\" > /sdcard/tmp.sh && echo \"/system/bin/input swipe 960 1000 960 1500\" >> /sdcard/tmp.sh && sh /sdcard/tmp.sh" };
     try {
         Runtime.getRuntime().exec(cmdline);
     } catch (Exception e) {
