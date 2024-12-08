@@ -16,8 +16,6 @@
 
 package com.google.android.accessibility.talkback.controller;
 
-import android.widget.Toast;
-import android.os.Handler;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -277,100 +275,89 @@ public class TelevisionNavigationController implements ServiceKeyEventListener {
     hasTriggeredConfirmKeyLongPress = true;
   }
 
-  private void onDirectionalKey(int keyCode, @Nullable EventId eventId) {
+private void onDirectionalKey(int keyCode, @Nullable EventId eventId) {
     switch (mode) {
-      case MODE_NAVIGATE:
-        {
-          @SearchDirectionOrUnknown int direction = SEARCH_FOCUS_UNKNOWN;
-          switch (keyCode) {
-            case KeyEvent.KEYCODE_DPAD_LEFT:
-              direction = SEARCH_FOCUS_LEFT;
-              break;
-            case KeyEvent.KEYCODE_DPAD_RIGHT:
-              direction = SEARCH_FOCUS_RIGHT;
-              break;
-            case KeyEvent.KEYCODE_DPAD_UP:
-              direction = SEARCH_FOCUS_UP;
-              executeSwipeCommand();
-              break;
-            case KeyEvent.KEYCODE_DPAD_DOWN:
-              direction = SEARCH_FOCUS_DOWN;
-              break;
-            default: // fall out
-          }
-          if (direction != SEARCH_FOCUS_UNKNOWN) {
-            pipeline.returnFeedback(
-                eventId,
-                Feedback.focusDirection(direction)
-                    .setGranularity(DEFAULT)
-                    .setInputMode(INPUT_MODE_TV_REMOTE)
-                    .setScroll(true)
-                    .setDefaultToInputFocus(true));
-            if (eventId != null) {
-              // We use keyEvent.getEventTime() as starting point because we don't know how long the
-              // message was enqueued before onKeyEvent() has started.
-              primesController.recordDuration(
-                  TimerAction.DPAD_NAVIGATION,
-                  eventId.getEventTimeMs(),
-                  SystemClock.uptimeMillis());
-            }
-          }
-        }
-        break;
-      case MODE_SEEK_CONTROL:
-        {
-          AccessibilityNodeInfoCompat cursor = getFocus(FocusType.ANY_FOCUS, eventId);
-          if (Role.getRole(cursor) != Role.ROLE_SEEK_CONTROL) {
-            setMode(MODE_NAVIGATE, eventId);
-          } else {
-            boolean isRtl = WindowUtils.isScreenLayoutRTL(service);
+        case MODE_NAVIGATE: {
+            @SearchDirectionOrUnknown int direction = SEARCH_FOCUS_UNKNOWN;
             switch (keyCode) {
-              case KeyEvent.KEYCODE_DPAD_UP:
-                pipeline.returnFeedback(
-                    eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_FORWARD));
-                break;
-              case KeyEvent.KEYCODE_DPAD_RIGHT:
-                if (isRtl) {
-                  pipeline.returnFeedback(
-                      eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_BACKWARD));
-                } else {
-                  pipeline.returnFeedback(
-                      eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_FORWARD));
-                }
-                break;
-              case KeyEvent.KEYCODE_DPAD_DOWN:
-                pipeline.returnFeedback(
-                    eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_BACKWARD));
-                break;
-              case KeyEvent.KEYCODE_DPAD_LEFT:
-                if (isRtl) {
-                  pipeline.returnFeedback(
-                      eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_FORWARD));
-                } else {
-                  pipeline.returnFeedback(
-                      eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_BACKWARD));
-                }
-                break;
-              default: // fall out
+                case KeyEvent.KEYCODE_DPAD_LEFT:
+                    direction = SEARCH_FOCUS_LEFT;
+                    break;
+                case KeyEvent.KEYCODE_DPAD_RIGHT:
+                    direction = SEARCH_FOCUS_RIGHT;
+                    break;
+                case KeyEvent.KEYCODE_DPAD_UP:
+                    //direction = SEARCH_FOCUS_UP;
+                    handleScroll(eventId, ACTION_SCROLL_BACKWARD); // Scroll up
+                    break;
+                case KeyEvent.KEYCODE_DPAD_DOWN:
+                    direction = SEARCH_FOCUS_DOWN;
+                    break;
+                default: // fall out
             }
-          }
+            if (direction != SEARCH_FOCUS_UNKNOWN) {
+                pipeline.returnFeedback(
+                    eventId,
+                    Feedback.focusDirection(direction)
+                        .setGranularity(DEFAULT)
+                        .setInputMode(INPUT_MODE_TV_REMOTE)
+                        .setScroll(true)
+                        .setDefaultToInputFocus(true));
+                if (eventId != null) {
+                    // Record navigation time
+                    primesController.recordDuration(
+                        TimerAction.DPAD_NAVIGATION,
+                        eventId.getEventTimeMs(),
+                        SystemClock.uptimeMillis());
+                }
+            }
+            break;
         }
-        break;
-      default: // fall out
-    }
-  }
-
-  public void executeSwipeCommand() {
-        new Handler().postDelayed(() -> {
-            try {
-                Runtime.getRuntime().exec("input swipe 960 1000 960 1500");
-                Toast.makeText(service, "Swipe Command Executed", Toast.LENGTH_SHORT).show();
-            } catch (IOException e) {
-                Toast.makeText(service, "Failed to execute swipe command", Toast.LENGTH_SHORT).show();
-                e.printStackTrace();
+        case MODE_SEEK_CONTROL: {
+            AccessibilityNodeInfoCompat cursor = getFocus(FocusType.ANY_FOCUS, eventId);
+            if (Role.getRole(cursor) != Role.ROLE_SEEK_CONTROL) {
+                setMode(MODE_NAVIGATE, eventId);
+            } else {
+                boolean isRtl = WindowUtils.isScreenLayoutRTL(service);
+                switch (keyCode) {
+                    case KeyEvent.KEYCODE_DPAD_UP:
+                        pipeline.returnFeedback(
+                            eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_FORWARD));
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_RIGHT:
+                        pipeline.returnFeedback(
+                            eventId, Feedback.nodeAction(cursor, isRtl ? ACTION_SCROLL_BACKWARD : ACTION_SCROLL_FORWARD));
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_DOWN:
+                        pipeline.returnFeedback(
+                            eventId, Feedback.nodeAction(cursor, ACTION_SCROLL_BACKWARD));
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_LEFT:
+                        pipeline.returnFeedback(
+                            eventId, Feedback.nodeAction(cursor, isRtl ? ACTION_SCROLL_FORWARD : ACTION_SCROLL_BACKWARD));
+                        break;
+                    default: // fall out
+                }
             }
-        }, 500);
+            break;
+        }
+        default: // fall out
     }
+}
+
+/**
+ * Handles scroll feedback action.
+ * @param eventId The EventId associated with the action.
+ * @param scrollAction The scroll action (e.g., ACTION_SCROLL_BACKWARD or ACTION_SCROLL_FORWARD).
+ */
+private void handleScroll(@Nullable EventId eventId, int scrollAction) {
+    AccessibilityNodeInfoCompat currentFocus = getFocus(FocusType.ANY_FOCUS, eventId);
+    if (currentFocus != null && AccessibilityNodeInfoUtils.isScrollable(currentFocus)) {
+        pipeline.returnFeedback(
+            eventId, Feedback.nodeAction(currentFocus, scrollAction));
+    }
+}
+
 
   private void onCenterKey(@Nullable EventId eventId) {
     switch (mode) {
