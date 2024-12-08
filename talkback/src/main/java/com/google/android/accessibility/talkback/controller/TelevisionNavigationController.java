@@ -16,7 +16,13 @@
 
 package com.google.android.accessibility.talkback.controller;
 
+import android.os.Bundle;
+import android.os.Handler;
 import android.widget.Toast;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+
+import java.io.IOException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -359,14 +365,17 @@ public class TelevisionNavigationController implements ServiceKeyEventListener {
       default: // fall out
     }
   }
-  
-    private void executeSwipeCommand() {
-        try {
-            // Execute the swipe via adb shell command
-            Runtime.getRuntime().exec("input swipe 960 1000 960 1500");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+  public void executeSwipeCommand() {
+        new Handler().postDelayed(() -> {
+            try {
+                Runtime.getRuntime().exec("input swipe 960 1000 960 1500");
+                Toast.makeText(this, "Swipe Command Executed", Toast.LENGTH_SHORT).show();
+            } catch (IOException e) {
+                Toast.makeText(this, "Failed to execute swipe command", Toast.LENGTH_SHORT).show();
+                e.printStackTrace();
+            }
+        }, 500);
     }
 
   private void onCenterKey(@Nullable EventId eventId) {
