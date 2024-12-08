@@ -358,14 +358,16 @@ public class TelevisionNavigationController implements ServiceKeyEventListener {
     }
   }
   
-    private void executeSwipeCommand() {
-        try {
-            // Execute the swipe via adb shell command
-            Runtime.getRuntime().exec("input swipe 960 1000 960 1500");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+private void executeSwipeCommand() {
+    try {
+        // Execute the swipe via adb shell command
+        Runtime.getRuntime().exec("input swipe 960 1000 960 1500");
+        Toast.makeText(this, "Swipe Command Executed", Toast.LENGTH_SHORT).show();
+    } catch (IOException e) {
+        e.printStackTrace();
+        Toast.makeText(this, "Swipe Command Failed", Toast.LENGTH_SHORT).show();
     }
+}
 
   private void onCenterKey(@Nullable EventId eventId) {
     switch (mode) {
